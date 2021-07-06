@@ -47,6 +47,10 @@ lazy val pythonLdFlags = {
   }
 }
 
+lazy val javaOpts = ai.kien.python.Python().scalapyProperties.get.map {
+  case (k, v) => s"""-D$k="$v""""
+}.mkString(" ")
+
 lazy val pythonLibsDir = {
   pythonLdFlags.find(_.startsWith("-L")).get.drop("-L".length)
 }
@@ -165,7 +169,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
   ).jvmSettings(
     libraryDependencies += "net.java.dev.jna" % "jna" % "5.8.0",
     fork in Test := true,
-    javaOptions in Test += s"-Djna.library.path=$pythonLibsDir"
+    javaOptions in Test += javaOpts
   ).nativeSettings(
     nativeLinkStubs := true,
     nativeLinkingOptions ++= pythonLdFlags
@@ -178,7 +182,7 @@ lazy val facadeGen = project.in(file("facadeGen"))
   .dependsOn(coreJVM)
   .settings(
     fork in run := true,
-    javaOptions in run += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
+    javaOptions in run += javaOpts
   )
 
 lazy val docs = project
@@ -191,7 +195,7 @@ lazy val docs = project
   .settings(
     fork := true,
     connectInput := true,
-    javaOptions += s"-Djna.library.path=$pythonLibsDir",
+    javaOptions += javaOpts,
     docusaurusCreateSite := {
       mdoc.in(Compile).toTask(" ").value
       Process(List("yarn", "install"), cwd = DocusaurusPlugin.website.value).!
@@ -208,7 +212,7 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
     name := "scalapy-bench",
     version := "0.1.0-SNAPSHOT"
   ).jvmSettings(
-    javaOptions += s"-Djna.library.path=$pythonLibsDir"
+    javaOptions += javaOpts
   ).nativeSettings(
     nativeLinkingOptions ++= pythonLdFlags,
     nativeMode := "release-fast"
