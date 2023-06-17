@@ -45,9 +45,9 @@ jobs:
       - name: Test python-native-libs
         run: |
           if [ "$RUNNER_OS" != "Windows" ]; then
-            sbt +pythonNativeLibsTestJVM/test +pythonNativeLibsTestNative/test
+            ./scripts/with_virtualenv.sh +pythonNativeLibsTestJVM/test +pythonNativeLibsTestNative/test
           else
-            sbt +pythonNativeLibsTestJVM/test
+            ./scripts/with_virtualenv.sh +pythonNativeLibsTestJVM/test
           fi
         shell: bash
       - name: Compile Benchmarks

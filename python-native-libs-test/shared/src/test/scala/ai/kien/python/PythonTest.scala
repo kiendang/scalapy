@@ -12,7 +12,7 @@ class PythonTest extends AnyFunSuite with PythonSuite {
     py"'Hello from ScalaPy!'"
   }
 
-  test("Loading package installed in virtualenv") {
+  test(s"Loading package ${Config.module}") {
     py.module(Config.module)
   }
 }

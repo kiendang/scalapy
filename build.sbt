@@ -1,6 +1,6 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import scala.sys.process._
-import java.nio.file.{Files, Paths}
+import scala.util.Properties
 
 import ai.kien.python.Python
 
@@ -257,37 +257,24 @@ def runProcess(cmd: Seq[String]) = {
   }
 }
 
-lazy val virtualenv = taskKey[File]("virtualenv")
-lazy val pythonTestPackage = taskKey[String]("pythonTestPackage")
-lazy val createVirtualenv = taskKey[String]("create virtualenv")
-lazy val deleteVirtualenv = taskKey[Unit]("delete virtualenv")
+lazy val pythonExecutable =
+  Option(System.getProperty("scalapy.ci.executable"))
+    .fold("None")(s => s"""Some("$s")""")
+lazy val pythonTestPackage =
+  Option(System.getProperty("scalapy.ci.pythontestpackage")).map(_.replace('-', '_')).getOrElse("sys")
 
 lazy val pythonNativeLibsTest = crossProject(JVMPlatform, NativePlatform)
   .crossType(CrossType.Full)
   .in(file("python-native-libs-test"))
   .settings(
     crossScalaVersions := supportedScalaVersions,
-    virtualenv := IO.temporaryDirectory / "venv",
-    pythonTestPackage := "typing-extensions",
-    createVirtualenv := {
-      IO.delete(virtualenv.value)
-      val venv = virtualenv.value.getAbsolutePath().toString()
-      runProcess(Seq("python", "-m", "venv", venv))
-
-      val python = Paths.get(venv, "bin", "python").toString()
-      runProcess(Seq(python, "-m", "pip", "install", pythonTestPackage.value))
-
-      python
-    },
-    deleteVirtualenv := IO.delete(virtualenv.value),
-    Test / testOptions += Tests.Cleanup(() => deleteVirtualenv.value: @sbtUnchecked),
     Test / sourceGenerators += Def.task {
       val file = (Test / sourceManaged).value / "Config.scala"
       val toWrite =
         s"""package ai.kien.python
            |object Config {
-           |  val pythonExecutable: String = "${createVirtualenv.value}"
-           |  val module: String = "${pythonTestPackage.value.replace('-', '_')}"
+           |  val pythonExecutable: Option[String] = $pythonExecutable
+           |  val module: String = "$pythonTestPackage"
            |}
          """.stripMargin
       IO.write(file, toWrite)
