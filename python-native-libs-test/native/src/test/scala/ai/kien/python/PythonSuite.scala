@@ -1,9 +1,9 @@
 package ai.kien.python
 
-import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap, Suite}
+import org.scalatest.{BeforeAndAfterAll, Suite}
 
-trait PythonSuite extends Suite with BeforeAndAfterAllConfigMap {
-  override def beforeAll(configMap: ConfigMap) = {
+trait PythonSuite extends Suite with BeforeAndAfterAll {
+  override def beforeAll() = {
     Config.pythonExecutable.foreach(System.setProperty("scalapy.python.programname", _))
   }
 }
