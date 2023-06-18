@@ -51,6 +51,14 @@ fi
 
 . "$VENV_ACTIVATE"
 
+echo "VIRTUALENV python:              ${PYTHON}"
+echo "CURRENT DEFAULT python ON PATH: $(command -v python)"
+
+if ! [ $(command -v python) -ef "$PYTHON" ]; then
+  echo "VIRTUALENV ACTIVATION FAILED. CURRENT DEFAULT python ON PATH DOES NOT POINT TO VIRTUALENV."
+  exit 1
+fi
+
 echo "RUNNING TESTS ..."
 
 sbt \
