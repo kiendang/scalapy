@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -x
 set -e
 
 VENV_DIR=$(mktemp -d)
