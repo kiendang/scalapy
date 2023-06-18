@@ -52,6 +52,13 @@ fi
 
 . "$VENV_ACTIVATE"
 
+echo "$PATH"
+echo "$PATHEXT"
+
+if [ -d "${VENV_DIR}/Scripts" ]; then
+  echo $(ls "${VENV_DIR}/Scripts")
+fi
+
 echo "VIRTUALENV python:              ${PYTHON}"
 echo "CURRENT DEFAULT python ON PATH: $(command -v python)"
 
