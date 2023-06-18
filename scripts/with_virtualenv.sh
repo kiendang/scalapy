@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 VENV_DIR=$(mktemp -d)
 PYTHON_TEST_PACKAGE="typing-extensions"
 
@@ -17,4 +19,4 @@ sbt \
 
 deactivate
 echo "Delete virtualenv ${VENV_DIR}"
-rm -r "${VENV_DIR}"
+rm -rf "${VENV_DIR}"
