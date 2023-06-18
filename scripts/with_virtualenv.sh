@@ -5,9 +5,19 @@ set -e
 VENV_DIR=$(mktemp -d)
 PYTHON_TEST_PACKAGE="typing-extensions"
 
+function cleanup {
+  if [ -x $(command -v deactivate) ]; then
+    deactivate
+  fi
+  echo "DELETING VIRTUALENV ${VENV_DIR} ..."
+  rm -rf "${VENV_DIR}"
+}
+
+trap cleanup EXIT
+
 echo "CREATING VIRTUALENV AT ${VENV_DIR} ..."
 
-python3 -m venv "${VENV_DIR}"
+python -m venv "${VENV_DIR}"
 
 PYTHON_NIX="${VENV_DIR}/bin/python"
 PYTHON_WIN="${VENV_DIR}/Scripts/python.exe"
@@ -21,27 +31,29 @@ else
   exit 1
 fi
 
+echo "INSTALLING PACKAGE ${PYTHON_TEST_PACKAGE} INTO VIRTUALENV..."
+
 "$PYTHON" -m pip install "$PYTHON_TEST_PACKAGE"
 
+echo "ACTIVATING VIRTUALENV AT ${VENV_DIR} ..."
+
 VENV_ACTIVATE_NIX="${VENV_DIR}/bin/activate"
-VENV_ACTIVATE_WIN="${VENV_DIR}/Scripts/activate.bat"
+VENV_ACTIVATE_WIN="${VENV_DIR}/Scripts/activate"
 
 if [ -f "$VENV_ACTIVATE_NIX" ]; then
-  source "$VENV_ACTIVATE_NIX"
+  VENV_ACTIVATE="$VENV_ACTIVATE_NIX"
 elif [ -f "$VENV_ACTIVATE_WIN" ]; then
-  cmd "$VENV_ACTIVATE_WIN"
+  VENV_ACTIVATE="$VENV_ACTIVATE_WIN"
 else
   echo "COULD NOT FIND VIRTUALENV ACTIVATE SCRIPT AT EITHER ${VENV_ACTIVATE_NIX} OR ${VENV_ACTIVATE_WIN}."
   exit 1
 fi
 
+. "$VENV_ACTIVATE"
+
 echo "RUNNING TESTS ..."
 
 sbt \
-  -Dscalapy.ci.executable="${VENV_DIR}/bin/python" \
+  -Dscalapy.ci.executable="${PYTHON}" \
   -Dscalapy.ci.pythontestpackage="$PYTHON_TEST_PACKAGE" \
   "$@"
-
-deactivate
-echo "DELETING VIRTUALENV ${VENV_DIR} ..."
-rm -rf "${VENV_DIR}"
